@@ -100,7 +100,44 @@ def investment_list(request):
    investments = Investment.objects.filter(acquired_date__lte=timezone.now())
    return render(request, 'portfolio/investment_list.html', {'investments': investments})
 
+@login_required
+def investment_edit(request, pk):
+   investment = get_object_or_404(Investment, pk=pk)
+   if request.method == "POST":
+       form = InvestmentForm(request.POST, instance=investment)
+       if form.is_valid():
+           investment = form.save()
+           investment.updated_date = timezone.now()
+           investment.save()
+           investments = investment.objects.filter(purchase_date__lte=timezone.now())
+           return render(request, 'portfolio/investment_list.html', {'investments': investments})
+   else:
+       # print("else")
+       form = InvestmentForm(instance=investment)
+   return render(request, 'portfolio/investment_edit.html', {'form': form})
 
+@login_required
+def investment_delete(request, pk):
+   investment = get_object_or_404(Stock, pk=pk)
+   investment.delete()
+   investments = Investment.objects.filter(purchase_date__lte=timezone.now())
+   return render(request, 'portfolio/investment_list.html', {'investments': investments})
+
+@login_required
+def investment_add(request):
+   if request.method == "POST":
+       form = InvestmentForm(request.POST)
+       if form.is_valid():
+           investment = form.save(commit=False)
+           investment.created_date = timezone.now()
+           investment.save()
+           investments = Investment.objects.filter(purchase_date__lte=timezone.now())
+           return render(request, 'portfolio/investment_list.html',
+                         {'investments': investments})
+   else:
+       form = InvestmentForm()
+       # print("Else")
+   return render(request, 'portfolio/investment_add.html', {'form': form})
 
 @login_required
 def portfolio(request,pk):
